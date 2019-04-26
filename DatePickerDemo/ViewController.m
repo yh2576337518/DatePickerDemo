@@ -39,9 +39,9 @@
 -(void)selectStartBtn:(UIButton *)startBtn endBtn:(UIButton *)endBtn selectBtn:(UIButton *)selectBtn selectTimeStr:(NSString *)selectTimeStr dicTimeKey:(NSString *)dicTimeKey{
     NSMutableDictionary *timeDic = [NSMutableDictionary dictionaryWithDictionary:self.dateDic];
     [timeDic removeObjectForKey:dicTimeKey];
-    if ([self validateWithTimeCompareTime:selectTimeStr allTimeDateDic:timeDic]) {
-        NSLog(@"---------------\n111111111111111111\n你选择的时间与其他的时间段有冲突，请选择其他时间");
-    }else{
+//    if ([self validateWithTimeCompareTime:selectTimeStr allTimeDateDic:timeDic]) {
+//        NSLog(@"---------------\n111111111111111111\n你选择的时间与其他的时间段有冲突，请选择其他时间");
+//    }else{
         NSString *startTimeStr = (startBtn == selectBtn)?selectTimeStr : startBtn.titleLabel.text;
         NSString *endTimeStr = (endBtn == selectBtn) ?selectTimeStr : endBtn.titleLabel.text;
         if ([self validateWithCompareStartTime:startTimeStr withCompareExpireTime:endTimeStr allTimeDateDic:timeDic]) {
@@ -53,7 +53,7 @@
             NSDate *timeEndDate = [self dateFromString:endTimeStr];
             [self.dateDic setObject:@[timeStartDate,timeEndDate] forKey:dicTimeKey];
         }
-    }
+//    }
 }
 
 #pragma mark --------开始时间按钮1
@@ -125,15 +125,6 @@
 }
 
 
--(NSString *)stringFormDate:(NSDate *)date{
-    NSDateFormatter * formatter = [[NSDateFormatter alloc]init];
-    // 下面的格式设置成你想要转化的样子, 2017-07-24 17:47:10
-    [formatter setDateFormat:@"HH:mm"];
-    NSString *dateStr = [formatter stringFromDate:date];
-    return dateStr;
-}
-
-
 -(NSDate *)dateFromString:(NSString *)dateStr{
     NSDateFormatter * formatter = [[NSDateFormatter alloc]init];
     [formatter setDateFormat:@"HH:mm"];
@@ -142,7 +133,13 @@
 }
 
 
-
+-(NSString *)stringFormDate:(NSDate *)date{
+    NSDateFormatter * formatter = [[NSDateFormatter alloc]init];
+    // 下面的格式设置成你想要转化的样子, 2017-07-24 17:47:10
+    [formatter setDateFormat:@"HH:mm"];
+    NSString *dateStr = [formatter stringFromDate:date];
+    return dateStr;
+}
 
 
 /**
@@ -155,7 +152,7 @@
         NSArray *timeDateArr = [timeDateDic objectForKey:key];
         NSDate *startTime = timeDateArr[0];
         NSDate *expireTime = timeDateArr[1];
-        if ([compareDate compare:startTime] == NSOrderedDescending && [compareDate compare:expireTime] == NSOrderedAscending) {
+        if (compareDate>=startTime && compareDate<=expireTime) {
             return YES;
         }
     }
@@ -169,13 +166,24 @@
  @return 比较结果
  */
 -(BOOL)validateWithCompareStartTime:(NSString *)compareStartTime withCompareExpireTime:(NSString *)compareExpireTime allTimeDateDic:(NSMutableDictionary *)timeDateDic{
+    if ([[timeDateDic allKeys] count] == 0) {
+        return NO;
+    }
     NSDate *compareStartDate = [self dateFromString:compareStartTime];
     NSDate *compareExpireDate = [self dateFromString:compareExpireTime];
     for (NSString *key in timeDateDic) {
         NSArray *timeDateArr = [timeDateDic objectForKey:key];
         NSDate *startDate = timeDateArr[0];
-        NSDate *expireDate = timeDateArr[0];
-        if (compareExpireDate>=startDate && compareStartDate<=expireDate) {
+        NSDate *expireDate = timeDateArr[1];
+        NSLog(@"==========\n%@\n%@",compareStartTime,compareExpireTime);
+        NSLog(@"==========\n%@\n%@",[self stringFormDate:startDate],[self stringFormDate:expireDate]);
+        if (compareStartDate<=startDate && compareExpireDate<=expireDate && compareExpireDate>=startDate) {
+            return YES;
+        }else if (compareStartDate<=startDate && compareExpireDate>=expireDate){
+            return YES;
+        }else if (compareStartDate>=startDate && compareExpireDate<=expireDate){
+            return YES;
+        }else if (compareStartDate>=startDate && compareStartDate<=expireDate && compareExpireDate>=expireDate){
             return YES;
         }
     }
